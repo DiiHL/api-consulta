@@ -1,0 +1,29 @@
+[project]
+name = "api-dashboard-er"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.136.3",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.1",
+    "sqlalchemy==2.0.46",
+    "sqlalchemy-iris[intersystems]==0.18.1",
+]
+
+[dependency-groups]
+dev = ["pyright>=1.1.409", "ruff>=0.15.15"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = true
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+include = ["src"]
+exclude = ["**/.*", "**/.venv", "**/venv", "**/node_modules", "**/__pycache__"]
+executionEnvironments = [{ root = "src" }]
+
+[tool.ruff.lint]
+select = ["E", "F", "PL", "B", "UP", "RUF", "FAST"]

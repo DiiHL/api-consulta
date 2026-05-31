@@ -1,0 +1,26 @@
+{
+    "editor.formatOnSave": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.tabSize": 4,
+        "editor.detectIndentation": false,
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
+    },
+    "python.analysis.diagnosticMode": "workspace",
+    "editor.tabSize": 4,
+    "editor.detectIndentation": false,
+    "python.terminal.useEnvFile": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.venv": true,
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "**/__init__.py": true,
+        "**/.import_linter_cache": true
+    }
+}
