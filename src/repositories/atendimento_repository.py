@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from typing import Any
 
 from sqlalchemy import text
@@ -34,11 +35,12 @@ class AtendimentoRespository:
             u.Descricao,
             CAST(s.AtendimentoDataInicio AS VARCHAR(10))
         """)
+        
+        try:
+            result = self.db.execute(query)
+            linhas = result.mappings().all()
 
-        result = self.db.execute(query)
-        linhas = result.mappings().all()
-
-        return [
+            return [
             {
                 "unidade": linha["unidade"],
                 "data_hora_busca": linha["data_hora_busca"],
@@ -49,3 +51,8 @@ class AtendimentoRespository:
             }
             for linha in linhas
         ]
+        except Exception as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Erro de conexão com o banco: {e}"
+    )
