@@ -1,41 +1,53 @@
-import os
+from __future__ import annotations
 
-from dotenv import load_dotenv
-from sqlalchemy import URL, create_engine
-from sqlalchemy.orm import sessionmaker
+from collections.abc import Generator
+from functools import lru_cache
 
-load_dotenv()
+from sqlalchemy import Engine, create_engine, URL
+from sqlalchemy.orm import Session, sessionmaker
 
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAMESPACE = os.getenv("DB_NAMESPACE")
+from config.config import get_settings
 
-# DATABASE_URL = (
-#     f"iris+intersystems://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAMESPACE}"
-# )
-if not (DB_USER and DB_PASSWORD and DB_HOST and DB_PORT and DB_NAMESPACE):
-    raise ValueError("configuração incompleta, checar arquivo de configuração ambientes.")
+SYNC_ENGINE_OPTIONS = {
+    "echo": False,
+    "pool_size": 30,
+    "max_overflow": 45,
+    "pool_pre_ping": True,
+}
 
-DATABASE_URL = URL.create(
+Url = URL.create(
     drivername="iris+intersystems",
-    username=DB_USER,
-    password=DB_PASSWORD,
-    host=DB_HOST,
-    port=int(DB_PORT),
-    database=DB_NAMESPACE,
+    username=get_settings().DB_USER,
+    password=get_settings().DB_PASSWORD,
+    host=get_settings().DB_HOST,
+    port=get_settings().DB_PORT,
+    database=get_settings().DB_NAMESPACE
 )
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True, connect_args={"ssl": False})
+@lru_cache
+def get_iris_engine() -> Engine:
+    return create_engine(Url, **SYNC_ENGINE_OPTIONS)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+@lru_cache
+def get_iris_session_factory() -> sessionmaker[Session]:
+    return sessionmaker(
+        bind=get_iris_engine(),
+        class_=Session,
+        autocommit=False,
+        autoflush=False,
+        expire_on_commit=False,
+    )
 
 
-def get_db():
-    db = SessionLocal()
-
+def get_db() -> Generator[Session, None, None]:
+    session = get_iris_session_factory()()
     try:
-        yield db
+        yield session
     finally:
-        db.close()
+        session.close()
+
+
+async def dispose_database_connections() -> None:
+    if get_iris_engine.cache_info().currsize:
+        get_iris_engine().dispose()
